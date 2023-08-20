@@ -1,7 +1,6 @@
 from telegram import Bot, InlineKeyboardButton, InlineKeyboardMarkup, ChatAction
-from telegram.ext import Updater, Filters, MessageHandler, CommandHandler, CallbackQueryHandler
+from telegram.ext import Updater, CommandHandler, CallbackQueryHandler
 from random import randint
-import requests
 
 
 WELCOME_MESSAGE = """Привет! Этот бот сделан @ltvnva в качестве тестового задания.
@@ -31,7 +30,7 @@ SCHOOL_PHOTO_BUTTON_CALLBACK_DATA = "SCHOOL_PHOTO"
 
 SCHOOL_PHOTO_CNT = 3
 
-REPO_LINK = ""
+REPO_LINK = "https://github.com/ELitvinova/test_task_Practicum"
 
 
 def start_command_handler(update, context):
