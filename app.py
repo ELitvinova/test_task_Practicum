@@ -1,6 +1,9 @@
 from telegram import Bot, InlineKeyboardButton, InlineKeyboardMarkup, ChatAction
-from telegram.ext import Updater, CommandHandler, CallbackQueryHandler
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackQueryHandler
 from random import randint
+from dotenv import load_dotenv
+from speechapi import speech_to_text
+import os
 
 
 WELCOME_MESSAGE = """Привет! Этот бот сделан @ltvnva в качестве тестового задания.
@@ -10,6 +13,9 @@ WELCOME_MESSAGE = """Привет! Этот бот сделан @ltvnva в ка�
 /post - показать пост о моем главном увлечении
 /voice - прислать войс на одну из трех тем
 /git - дать ссылку на публичный репозиторий с исходным кодом
+
+А еще он может распознавать речь. Правда, он знает только одну голосовую команду: "Пришли ссылку на блог". Какой блог? \
+Конечно же, мой :)
 """
 
 HELP_MESSAGE = """
@@ -18,6 +24,8 @@ HELP_MESSAGE = """
 /post - показать пост о моем главном увлечении
 /voice - прислать войс на одну из трех тем
 /git - дать ссылку на публичный репозиторий с исходным кодом
+
+Получить ссылку на мой блог: голосовое сообщение с текстом "Пришли ссылку на блог"
 """
 
 SQL_BUTTON_CALLBACK_DATA = "SQL"
@@ -151,6 +159,21 @@ def post_command_handler(update, context):
             caption=post_text)
 
 
+def voice_message_handler(update, context):
+    chat = update.effective_chat
+    message_voice = update.message.voice
+    voice_file_path = context.bot.get_file(message_voice.file_id).file_path
+    text = speech_to_text(voice_file_path)
+    context.bot.send_message(chat.id, text=f'Распознанный текст:\n "{text}"')
+    if text.lower() == "пришли ссылку на блог":
+        send_blog_link(update, context)
+
+
+def send_blog_link(update, context):
+    chat = update.effective_chat
+    context.bot.send_message(chat.id, text="Высылаю ссылку, как ты просил: https://t.me/kate_groks")
+
+
 def callback_query_handler(update, context):
     callback_data = update.callback_query.data
     if callback_data == SELFIE_BUTTON_CALLBACK_DATA:
@@ -166,19 +189,20 @@ def callback_query_handler(update, context):
 
 
 if __name__ == "__main__":
-    with open('./telegram.token') as token_file:
-        token = token_file.read().strip()
+    load_dotenv()
+    token = os.getenv('TOKEN')
 
-        bot = Bot(token=token)
-        updater = Updater(token=token)
+    bot = Bot(token=token)
+    updater = Updater(token=token)
 
-        updater.dispatcher.add_handler(CommandHandler('start', start_command_handler))
-        updater.dispatcher.add_handler(CommandHandler('help', help_command_handler))
-        updater.dispatcher.add_handler(CommandHandler('git', git_command_handler))
-        updater.dispatcher.add_handler(CommandHandler('post', post_command_handler))
-        updater.dispatcher.add_handler(CommandHandler('photo', photo_command_handler))
-        updater.dispatcher.add_handler(CommandHandler('voice', voice_command_handler))
-        updater.dispatcher.add_handler(CallbackQueryHandler(callback_query_handler))
+    updater.dispatcher.add_handler(CommandHandler('start', start_command_handler))
+    updater.dispatcher.add_handler(CommandHandler('help', help_command_handler))
+    updater.dispatcher.add_handler(CommandHandler('git', git_command_handler))
+    updater.dispatcher.add_handler(CommandHandler('post', post_command_handler))
+    updater.dispatcher.add_handler(CommandHandler('photo', photo_command_handler))
+    updater.dispatcher.add_handler(CommandHandler('voice', voice_command_handler))
+    updater.dispatcher.add_handler(MessageHandler(Filters.voice, voice_message_handler))
+    updater.dispatcher.add_handler(CallbackQueryHandler(callback_query_handler))
 
-        updater.start_polling()
-        updater.idle()
+    updater.start_polling()
+    updater.idle()
