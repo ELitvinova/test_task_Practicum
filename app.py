@@ -135,7 +135,7 @@ def gpt_command_handler(update, context):
 def love_command_handler(update, context):
     chat = update.effective_chat
     context.bot.send_chat_action(chat.id, ChatAction.UPLOAD_VOICE)
-    with open("./voices/voice_gpt.ogg", "rb") as audio:
+    with open("./voices/voice_love.ogg", "rb") as audio:
         context.bot.send_voice(
             chat.id,
             audio,
